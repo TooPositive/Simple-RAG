@@ -1,0 +1,41 @@
+# .gitignore
+# Specifies intentionally untracked files that Git should ignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-selfcheck.json
+*.egg-info/
+dist/
+build/
+
+# Environment variables (contains sensitive API keys - NEVER commit this)
+.env
+
+# Data files (typically too large for git and project-specific)
+data/
+
+# Vector database (generated at runtime, can be large)
+chroma_db/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log

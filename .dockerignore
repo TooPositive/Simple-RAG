@@ -1,0 +1,44 @@
+# .dockerignore
+# Prevents unnecessary files from being copied into the Docker image
+# This keeps the image size small and prevents sensitive data from being included
+
+# Version control
+.git
+.gitignore
+
+# Python virtual environments
+.venv
+venv
+env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables (contains sensitive API keys)
+.env
+
+# Vector database (will be created/mounted at runtime)
+chroma_db/
+
+# Test data and fixtures
+tests/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation
+README.md
+*.md
+
+# Docker files (no need to copy Docker files into the image)
+Dockerfile
+.dockerignore
+docker-compose.yml

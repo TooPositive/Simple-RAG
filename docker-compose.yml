@@ -1,0 +1,39 @@
+# docker-compose.yml
+# Orchestrates the RAG chatbot container with proper configuration
+#
+# Usage:
+#   docker-compose build    # Build the image
+#   docker-compose up       # Start the chatbot
+#   docker-compose down     # Stop and remove the container
+
+version: '3.8'
+
+services:
+  # Main chatbot service
+  chatbot:
+    # Build configuration
+    build: .
+
+    # Container name for easy identification
+    container_name: rag_chatbot
+
+    # Interactive mode: required for the CLI chatbot
+    # stdin_open: Keeps STDIN open for user input
+    # tty: Allocates a pseudo-TTY for interactive terminal
+    stdin_open: true
+    tty: true
+
+    # Volume mounts: persist data between container restarts
+    volumes:
+      # Mount the local data directory (PDFs, audio, video files)
+      # This allows you to add/modify knowledge base files without rebuilding
+      - ./data:/app/data
+
+      # Mount the vector database directory for persistence
+      # The ChromaDB database will be saved here and survive container restarts
+      - ./chroma_db:/app/chroma_db
+
+    # Environment variables: Load from .env file
+    # The .env file should contain your Azure OpenAI credentials
+    env_file:
+      - .env
