@@ -2,9 +2,15 @@
 # Python dependencies for the RAG chatbot project
 # Install with: pip install -r requirements.txt
 
+# ============================================
+# v1.0 Dependencies (EXISTING - DO NOT REMOVE)
+# ============================================
+
 # Testing framework
 pytest==7.4.3
 pytest-mock==3.12.0
+pytest-cov==4.1.0
+pytest-asyncio==0.23.0
 
 # Configuration management
 python-dotenv==1.0.0
@@ -13,9 +19,10 @@ python-dotenv==1.0.0
 azure-ai-formrecognizer==3.3.3  # Document Intelligence (recommended)
 pdf2image==1.16.3  # For Vision API (requires poppler)
 pypdf==6.1.1       # For text extraction (free alternative)
+Pillow>=10.2.0     # Image processing (flexible version for compatibility)
 
 # AI Services - Azure OpenAI for embeddings, chat, and transcription
-openai>=2.3.0
+openai>=1.10.0  # Azure OpenAI SDK
 
 # Multimedia processing (requires ffmpeg system dependency)
 ffmpeg-python==0.2.0
@@ -30,3 +37,31 @@ tqdm==4.67.1
 chromadb==0.4.22
 # Pin NumPy to 1.x for ChromaDB 0.4.22 compatibility
 numpy<2.0.0
+
+# ============================================
+# v2.0 Dependencies (NEW - Agentic System)
+# ============================================
+
+# LangChain ecosystem for agent orchestration
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langgraph>=0.0.20
+
+# Observability (optional but recommended)
+langsmith>=0.1.0  # Compatible with modern langchain versions
+
+# Repository analysis tools
+gitpython==3.1.41
+libcst>=1.1.0  # Use latest version with prebuilt wheels
+
+# Version parsing for dependency checks
+packaging==23.2
+
+# ============================================
+# Development Dependencies
+# ============================================
+
+# Code formatting and linting
+black==24.1.0
+mypy==1.8.0
+pylint==3.0.3
