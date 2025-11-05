@@ -56,7 +56,7 @@ def create_agent_graph() -> StateGraph:
             "analyze": "repo_analyzer",
             "retrieve": "retriever",  # RAG retrieval from ChromaDB
             "reason": "reasoner",
-            "end": END
+            "end": "evaluator"  # ALWAYS evaluate before ending
         }
     )
     
