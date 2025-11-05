@@ -29,17 +29,30 @@ async def reflection_node(state: AgentState) -> AgentState:
         AgentState: Updated state with reflection and next action
     """
     new_state = dict(state)
-    
+
     task = state["task"]
     task_type = state.get("task_type", "general")
     final_output = state.get("final_output", "")
     reasoning_steps = state.get("reasoning_steps", [])
     tool_usage = state.get("tool_usage", [])
     generation_count = state.get("generation_count", 0)  # Track generation attempts
-    
+
+    # Check if reflection should be skipped (for simple queries)
+    skip_reflection = state.get("skip_reflection", False)
+
+    if skip_reflection:
+        # Skip expensive LLM reflection for simple factual queries
+        print("  ⚡ Self-reflection skipped (simple query - saves ~2500 tokens)")
+        new_state["reflection_notes"] = state.get("reflection_notes", []) + [
+            "Reflection: Skipped for simple query (token optimization)"
+        ]
+        new_state["reflection_assessment"] = "good"
+        new_state["next_action"] = "end"
+        return new_state
+
     # Check if we have Azure OpenAI credentials
     api_key = os.getenv("AZURE_OPENAI_API_KEY")
-    
+
     if not api_key or not final_output:
         # Fallback reflection if no API key or output
         print("  ✓ Self-assessment: good (no API key for reflection)")

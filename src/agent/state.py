@@ -58,6 +58,7 @@ class AgentState(TypedDict):
     generation_count: int  # Number of times output was generated
     max_iterations: int  # Maximum allowed iterations
     is_complete: bool  # Whether task is complete
+    skip_reflection: Optional[bool]  # Skip reflection for simple queries (token optimization)
 
 
 def create_initial_state(
@@ -123,7 +124,8 @@ def create_initial_state(
         iteration_count=0,
         generation_count=0,
         max_iterations=max_iterations,
-        is_complete=False
+        is_complete=False,
+        skip_reflection=False
     )
 
 
