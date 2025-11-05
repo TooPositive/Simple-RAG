@@ -244,14 +244,14 @@ DO NOT waste API calls regenerating the same data.
                 # Check if rate limit error
                 if '429' in error_str and attempt < max_retries - 1:
                     import re
-                    import time
+                    import asyncio
                     # Extract wait time from error
                     match = re.search(r'retry after (\d+) seconds', error_str.lower())
-                    wait_time = int(match.group(1)) if match else 2
-                    wait_time *= (attempt + 1)  # Exponential backoff
-                    
+                    base_wait = int(match.group(1)) if match else 2
+                    wait_time = min(base_wait * (2 ** attempt), 60)  # Exponential backoff, capped at 60s
+
                     print(f"  ⏳ High demand - waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
-                    time.sleep(wait_time)
+                    await asyncio.sleep(wait_time)
                     continue
                 else:
                     # Not rate limit or last attempt - use fallback

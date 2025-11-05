@@ -7,6 +7,7 @@ the LangGraph nodes, carrying all context, reasoning, and results.
 
 from typing import TypedDict, Annotated, Sequence, Optional, List, Dict
 import operator
+import copy
 from langchain_core.messages import BaseMessage, HumanMessage
 
 
@@ -133,18 +134,18 @@ def update_state(
 ) -> AgentState:
     """
     Update agent state with new values.
-    
+
     For list fields with Annotated[..., operator.add], new values are
     appended rather than replaced.
-    
+
     Args:
         state: Current state
         updates: Dictionary of fields to update
         increment_iteration: Whether to increment iteration_count
-    
+
     Returns:
         AgentState: Updated state
-    
+
     Example:
         >>> state = create_initial_state("Test", "test")
         >>> updated = update_state(state, {
@@ -154,8 +155,8 @@ def update_state(
         >>> updated["iteration_count"]
         1
     """
-    # Create a copy of the state
-    new_state = AgentState(**state)
+    # Create a deep copy of the state to prevent reference sharing
+    new_state = AgentState(**copy.deepcopy(state))
     
     # Apply updates
     if updates:

@@ -153,20 +153,31 @@ def embed_and_store_chunks(chunks: List[Dict[str, str]], collection: Collection)
         ids_to_add.append(f"chunk_{chunk_hash}")
 
     try:
-        # Step 1: Generate embeddings for all chunks in one API call
-        # This is more efficient than calling the API for each chunk individually
-        print(f"Calling Azure OpenAI to generate {len(chunks)} embeddings...")
+        # Step 1: Generate embeddings in batches to avoid API limits
+        # Azure OpenAI has limits on batch size (~2048 tokens per request)
+        # We batch in chunks of 50 to stay well under the limit
+        BATCH_SIZE = 50
+        all_embeddings = []
 
-        response = client.embeddings.create(
-            input=documents_to_add,  # List of texts to embed
-            model=settings.embedding_model_name  # e.g., "text-embedding-ada-002"
-        )
+        print(f"Calling Azure OpenAI to generate {len(chunks)} embeddings (in batches of {BATCH_SIZE})...")
 
-        # Extract the embedding vectors from the response
-        # response.data is a list of Embedding objects, each with an .embedding attribute
-        embeddings = [item.embedding for item in response.data]
+        for i in range(0, len(documents_to_add), BATCH_SIZE):
+            batch = documents_to_add[i:i + BATCH_SIZE]
 
-        print(f"✓ Embeddings generated successfully ({len(embeddings)} vectors)")
+            # Generate embeddings for this batch
+            response = client.embeddings.create(
+                input=batch,
+                model=settings.embedding_model_name
+            )
+
+            # Extract embeddings from response
+            batch_embeddings = [item.embedding for item in response.data]
+            all_embeddings.extend(batch_embeddings)
+
+            if len(documents_to_add) > BATCH_SIZE:
+                print(f"  ✓ Processed batch {i // BATCH_SIZE + 1}/{(len(documents_to_add) + BATCH_SIZE - 1) // BATCH_SIZE}")
+
+        print(f"✓ Embeddings generated successfully ({len(all_embeddings)} vectors)")
 
         # Step 2: Store everything in ChromaDB
         # ChromaDB will:
@@ -174,7 +185,7 @@ def embed_and_store_chunks(chunks: List[Dict[str, str]], collection: Collection)
         # - Store the text content (for returning in results)
         # - Store the metadata (for citation/filtering)
         collection.add(
-            embeddings=embeddings,  # List of vectors
+            embeddings=all_embeddings,  # List of vectors
             documents=documents_to_add,  # Corresponding texts
             metadatas=metadatas_to_add,  # Corresponding metadata
             ids=ids_to_add  # Unique identifiers

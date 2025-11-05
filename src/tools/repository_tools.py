@@ -185,25 +185,68 @@ def extract_dependencies(root_path: str) -> Dict:
             content = req_file.read_text()
             for line in content.splitlines():
                 line = line.strip()
-                
+
                 # Skip comments and empty lines
                 if not line or line.startswith("#"):
                     continue
-                
-                # Parse dependency
-                # Handle formats: package==version, package>=version, package
-                match = re.match(r"^([a-zA-Z0-9_-]+)([><=!]+)?(.+)?", line)
-                if match:
-                    name = match.group(1)
-                    operator = match.group(2) or ""
-                    version = match.group(3) or ""
-                    
+
+                # Skip editable installs (-e ...)
+                if line.startswith("-e"):
                     dependencies.append({
-                        "name": name,
-                        "version": version.strip() if version else None,
-                        "operator": operator,
-                        "raw": line
+                        "name": "editable-install",
+                        "version": None,
+                        "operator": "",
+                        "raw": line,
+                        "extras": []
                     })
+                    continue
+
+                # Skip URLs and git references
+                if line.startswith(("http://", "https://", "git+", "file://")):
+                    # Try to extract package name from URL
+                    pkg_name = "url-package"
+                    if "/" in line:
+                        pkg_name = line.split("/")[-1].split(".git")[0].split("#")[0]
+                    dependencies.append({
+                        "name": pkg_name,
+                        "version": None,
+                        "operator": "",
+                        "raw": line,
+                        "extras": []
+                    })
+                    continue
+
+                # Parse standard dependency
+                # Format: package[extra1,extra2]>=version
+                # Extract package name (before [ or version specifier)
+                match = re.match(r"^([a-zA-Z0-9_-]+)", line)
+                if not match:
+                    continue
+
+                name = match.group(1)
+
+                # Extract extras (between [ and ])
+                extras = []
+                extras_match = re.search(r"\[([^\]]+)\]", line)
+                if extras_match:
+                    extras = [e.strip() for e in extras_match.group(1).split(",")]
+
+                # Extract version specifier
+                specifier_match = re.search(r"([><=!~]+)([\d\.\*]+)", line)
+                if specifier_match:
+                    operator = specifier_match.group(1)
+                    version = specifier_match.group(2)
+                else:
+                    operator = ""
+                    version = None
+
+                dependencies.append({
+                    "name": name,
+                    "version": version,
+                    "operator": operator,
+                    "raw": line,
+                    "extras": extras
+                })
         except Exception as e:
             pass
     

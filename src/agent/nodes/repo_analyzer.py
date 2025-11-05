@@ -13,6 +13,7 @@ from src.tools.repository_tools import (
     generate_architecture_map,
     extract_code_symbols
 )
+from src.utils.cache import get_cache
 
 
 async def repo_analyzer_node(state: AgentState) -> AgentState:
@@ -41,10 +42,10 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
                 repo_root = os.path.abspath(test_path)
                 break
     
-    # Check if we already have cached data (from previous query)
-    has_cached_symbols = bool(state.get("code_symbols") and state.get("verification_outputs"))
-    
-    if has_cached_symbols:
+    # Check session cache first (from previous query in same session)
+    has_session_cache = bool(state.get("code_symbols") and state.get("verification_outputs"))
+
+    if has_session_cache:
         print(f"📦 Using fully cached repository analysis (skipping expensive operations)")
         # Keep existing cached data
         print(f"  ✓ Repo structure: {len(state.get('repo_structure', {}).get('children', []))} items (cached)")
@@ -60,7 +61,29 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
             print(f"  ✓ Coverage report (cached)")
         # Keep all cached data in new_state
         return new_state
-    
+
+    # Check persistent disk cache (survives sessions)
+    cache = get_cache()
+    cached_data = cache.get(repo_root)
+
+    if cached_data:
+        # Load from disk cache
+        new_state["repo_structure"] = cached_data.get("repo_structure")
+        new_state["code_files"] = cached_data.get("code_files")
+        new_state["dependencies"] = cached_data.get("dependencies")
+        new_state["architecture"] = cached_data.get("architecture")
+        new_state["code_symbols"] = cached_data.get("code_symbols")
+        new_state["verification_outputs"] = cached_data.get("verification_outputs")
+
+        # Show cache summary
+        symbols = new_state.get("code_symbols", {})
+        print(f"  ✓ Code symbols: {symbols.get('summary', {}).get('total_classes', 0)} classes, {symbols.get('summary', {}).get('total_functions', 0)} functions (cached)")
+
+        # Next: Go to reasoner
+        new_state["next_action"] = "generate"
+
+        return new_state
+
     print(f"🔍 Analyzing repository at: {repo_root}")
     
     # Analyze directory structure
@@ -100,13 +123,13 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
     verification_outputs = {}
     
     try:
-        # Count actual tests with pytest
+        # Count actual tests with pytest (increased timeout for large test suites)
         result = subprocess.run(
             ["pytest", "--collect-only", "-q"],
             cwd=repo_root,
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=60  # Increased from 10s to 60s for larger projects
         )
         verification_outputs["pytest_collect"] = result.stdout + result.stderr
         print(f"  ✓ Ran pytest --collect-only")
@@ -234,5 +257,16 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
         "dependencies_found": deps_count,
         "modules_found": modules_count
     }]
-    
+
+    # Save to persistent cache for future sessions
+    cache_data = {
+        "repo_structure": new_state["repo_structure"],
+        "code_files": new_state["code_files"],
+        "dependencies": new_state["dependencies"],
+        "architecture": new_state["architecture"],
+        "code_symbols": new_state["code_symbols"],
+        "verification_outputs": new_state["verification_outputs"]
+    }
+    cache.set(repo_root, cache_data)
+
     return new_state

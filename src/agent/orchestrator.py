@@ -5,6 +5,7 @@ This module creates and manages the LangGraph workflow that
 orchestrates all agent nodes and tools.
 """
 
+import logging
 from langgraph.graph import StateGraph, END
 from src.agent.state import AgentState, create_initial_state
 from src.agent.nodes.planner import planning_node
@@ -14,6 +15,9 @@ from src.agent.nodes.reasoner import reasoning_node
 from src.agent.nodes.reflector import reflection_node
 from src.agent.nodes.generator import generation_node
 from src.agent.nodes.evaluator import evaluation_node
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 def create_agent_graph() -> StateGraph:
@@ -181,17 +185,50 @@ async def run_agent(
         initial_state["code_files"] = previous_repo_data.get('code_files', [])
         initial_state["code_symbols"] = previous_repo_data.get('code_symbols', {})
         initial_state["verification_outputs"] = previous_repo_data.get('verification_outputs', {})
-    
-    # Create and run graph
+
+    # Create and run graph with proper exception handling
     graph = create_agent_graph()
-    final_state = await graph.ainvoke(initial_state)
-    
+
+    try:
+        final_state = await graph.ainvoke(initial_state)
+    except Exception as e:
+        logger.error(f"Agent execution failed: {e}", exc_info=True)
+        print(f"  ❌ Agent execution encountered an error: {type(e).__name__}")
+        print(f"  💡 Creating fallback response...")
+
+        # Create fallback state with error information
+        final_state = initial_state.copy()
+        final_state["final_output"] = (
+            f"I apologize, but I encountered an error while processing your request.\n\n"
+            f"**Error Type:** {type(e).__name__}\n"
+            f"**Details:** {str(e)[:200]}\n\n"
+            f"This may be due to:\n"
+            f"- Missing or invalid API credentials\n"
+            f"- Network connectivity issues\n"
+            f"- Rate limiting from API providers\n"
+            f"- Invalid input format\n\n"
+            f"Please check your configuration and try again."
+        )
+        final_state["is_complete"] = False
+        final_state["evaluation_scores"] = {
+            "task_completion": 0.0,
+            "reasoning_quality": 0.0,
+            "tool_effectiveness": 0.0,
+            "reflection_quality": 0.0,
+            "output_quality": 0.0,
+            "overall_score": 0.0
+        }
+
     # Generate evaluation explanations if scores exist
     if final_state.get("evaluation_scores"):
-        from src.evaluation.explanations import generate_all_explanations
-        final_state["evaluation_explanations"] = generate_all_explanations(
-            final_state, 
-            final_state["evaluation_scores"]
-        )
-    
+        try:
+            from src.evaluation.explanations import generate_all_explanations
+            final_state["evaluation_explanations"] = generate_all_explanations(
+                final_state,
+                final_state["evaluation_scores"]
+            )
+        except Exception as e:
+            logger.warning(f"Failed to generate evaluation explanations: {e}")
+            # Continue without explanations rather than failing
+
     return final_state
