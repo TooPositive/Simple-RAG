@@ -164,33 +164,37 @@ class AgentCLI:
         print("\n" + "="*70)
         print("📊 EVALUATION SCORES")
         print("="*70)
-        scores = result['evaluation_scores']
-        print(f"Overall Score: {scores['overall_score']:.1f}/100")
-        print(f"  • Task Completion: {scores['task_completion']:.1f}")
-        print(f"  • Reasoning Quality: {scores['reasoning_quality']:.1f}")
-        print(f"  • Tool Effectiveness: {scores['tool_effectiveness']:.1f}")
-        print(f"  • Reflection Quality: {scores['reflection_quality']:.1f}")
-        print(f"  • Output Quality: {scores['output_quality']:.1f}")
+        scores = result.get('evaluation_scores')
+        if scores:
+            print(f"Overall Score: {scores['overall_score']:.1f}/100")
+            print(f"  • Task Completion: {scores['task_completion']:.1f}")
+            print(f"  • Reasoning Quality: {scores['reasoning_quality']:.1f}")
+            print(f"  • Tool Effectiveness: {scores['tool_effectiveness']:.1f}")
+            print(f"  • Reflection Quality: {scores['reflection_quality']:.1f}")
+            print(f"  • Output Quality: {scores['output_quality']:.1f}")
+        else:
+            print("⏳ Evaluation in progress (workflow requires more iterations)")
+            print("   The agent is still gathering information or refining its response.")
         
         # Show evaluation explanations if available
-        if result.get('evaluation_explanations'):
+        if scores and result.get('evaluation_explanations'):
             print("\n" + "-"*70)
             print("📋 WHY THESE SCORES?")
             print("-"*70)
-            
+
             explanations = result['evaluation_explanations']
-            
+
             # Show explanations for high-scoring metrics (helps understand quality)
             if scores.get('output_quality', 0) >= 90:
                 print("\n✨ Output Quality ({}/ 100):".format(scores['output_quality']))
                 for line in explanations.get('output_quality', [])[:15]:  # Limit lines
                     print(f"  {line}")
-            
+
             if scores.get('reflection_quality', 0) >= 80:
                 print("\n✨ Reflection Quality ({}/100):".format(scores['reflection_quality']))
                 for line in explanations.get('reflection_quality', []):
                     print(f"  {line}")
-            
+
             if scores.get('tool_effectiveness', 0) >= 90:
                 print("\n✨ Tool Effectiveness ({}/100):".format(scores['tool_effectiveness']))
                 for line in explanations.get('tool_effectiveness', []):
@@ -208,9 +212,10 @@ class AgentCLI:
         print("📜 CONVERSATION HISTORY")
         print("="*70)
         for i, entry in enumerate(self.conversation_history, 1):
-            score = entry['result']['evaluation_scores']['overall_score']
+            scores = entry['result'].get('evaluation_scores')
+            score_text = f"{scores['overall_score']:.1f}/100" if scores else "In Progress"
             print(f"\n{i}. Query: {entry['query'][:60]}...")
-            print(f"   Score: {score:.1f}/100")
+            print(f"   Score: {score_text}")
         print("="*70 + "\n")
     
     def show_stats(self):
@@ -218,18 +223,26 @@ class AgentCLI:
         if not self.conversation_history:
             print("📊 No statistics yet.\n")
             return
-        
-        scores = [e['result']['evaluation_scores']['overall_score'] 
-                  for e in self.conversation_history]
-        avg_score = sum(scores) / len(scores)
-        
+
+        # Filter out entries without evaluation scores
+        scores = [e['result']['evaluation_scores']['overall_score']
+                  for e in self.conversation_history
+                  if e['result'].get('evaluation_scores')]
+
         print("\n" + "="*70)
         print("📊 SESSION STATISTICS")
         print("="*70)
         print(f"Total Queries: {len(self.conversation_history)}")
-        print(f"Average Score: {avg_score:.1f}/100")
-        print(f"Highest Score: {max(scores):.1f}/100")
-        print(f"Lowest Score: {min(scores):.1f}/100")
+
+        if scores:
+            avg_score = sum(scores) / len(scores)
+            print(f"Average Score: {avg_score:.1f}/100")
+            print(f"Highest Score: {max(scores):.1f}/100")
+            print(f"Lowest Score: {min(scores):.1f}/100")
+            print(f"Evaluated: {len(scores)}/{len(self.conversation_history)} queries")
+        else:
+            print("No completed evaluations yet (all queries in progress)")
+
         print("="*70 + "\n")
     
     async def interactive_loop(self, verbose: bool = False):
