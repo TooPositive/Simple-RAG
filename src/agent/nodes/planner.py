@@ -54,15 +54,17 @@ async def planning_node(state: AgentState) -> AgentState:
         # General tasks - check if repo data would be useful
         task_lower = task.lower()
         code_keywords = ['where', 'which', 'file', 'class', 'function', 'import', 'use', 'used']
-        
+
         if any(keyword in task_lower for keyword in code_keywords) and not has_repo_data:
             # Looks like a code question but no data - analyze first
             next_action = "analyze"
             plan_note = f"Code-specific question detected - analyzing repository"
+            skip_reflection = False  # Code questions may need reflection
         else:
-            # Simple reasoning task
+            # Simple reasoning task (math, general questions, etc.)
             next_action = "reason"
             plan_note = f"Task requires direct reasoning"
+            skip_reflection = True  # Simple tasks don't need expensive reflection
     
     # Update state
     new_state = dict(state)

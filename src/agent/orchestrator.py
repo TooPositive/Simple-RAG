@@ -145,7 +145,7 @@ def route_after_reflection(state: AgentState) -> str:
 async def run_agent(
     task: str,
     task_type: str = "analyze_repo",
-    max_iterations: int = 1,  # Single pass through workflow (no looping needed)
+    max_iterations: int = 3,  # Allow 1-2 reflection loops for self-correction
     previous_repo_data: dict = None
 ) -> AgentState:
     """
