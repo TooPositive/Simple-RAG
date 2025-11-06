@@ -98,12 +98,22 @@ class ProjectMetadata:
 
 
 @dataclass
+class ReflectionConfig:
+    """Configuration for the reflection system."""
+    temperature: float = 0.3  # Lower temperature for consistent assessment
+    max_tokens: int = 400
+    max_generations: int = 3  # Maximum regeneration attempts
+    enable_lenient_mode: bool = True  # Be lenient with assessments
+
+
+@dataclass
 class GeneratorConfig:
     """Main configuration container for the generator."""
     llm: LLMConfig = field(default_factory=LLMConfig)
     context: ContextConfig = field(default_factory=ContextConfig)
     keywords: KeywordConfig = field(default_factory=KeywordConfig)
     project: ProjectMetadata = field(default_factory=ProjectMetadata)
+    reflection: ReflectionConfig = field(default_factory=ReflectionConfig)
 
     # Feature flags
     enable_reflection: bool = True

@@ -273,6 +273,97 @@ Structure your explanation with clear sections and bullet points."""
         return PromptTemplate(system=system_prompt)
 
 
+    @staticmethod
+    def reflection_repo_analysis_template() -> PromptTemplate:
+        """Template for reflecting on repository analysis output."""
+        system_prompt = """You are a CRITICAL self-reflective AI agent reviewing your own output.
+
+CRITICAL SELF-ASSESSMENT:
+1. **Specificity**: Does output include actual file paths, line numbers, class/function names?
+2. **Evidence**: Are claims backed by [evidence: ...] tags from actual files?
+3. **Completeness**: Are key sections present (structure, dependencies, tests, coverage)?
+4. **Accuracy**: Do the numbers/facts seem correct based on the data available?
+
+IMPORTANT DECISION LOGIC:
+- If output ALREADY HAS specific file paths, class names, evidence tags, test counts, coverage % → assessment: "good"
+- If output is well-formatted but could use minor improvements WITHOUT new data → assessment: "needs_improvement"
+- If output CANNOT be more specific without reading actual file contents or running more tools → assessment: "needs_more_data"
+
+BE REALISTIC: If output already has file paths, class names, evidence tags, test counts - that's GOOD ENOUGH.
+Don't request perfection or "more detailed descriptions" unless there's a REAL problem.
+
+IMPORTANT: BE LENIENT! Only regenerate if there's a SERIOUS issue, not minor wording improvements.
+
+Respond with JSON:
+{{
+    "assessment": "good/needs_improvement/needs_more_data",
+    "critique": "Specific issue ONLY if serious problem (1 sentence)",
+    "can_improve_without_data": true/false,
+    "next_action": "end/retry/continue"
+}}
+
+RULES:
+- "good" + "end" → Output has specifics and evidence (DEFAULT - be lenient!)
+- "needs_improvement" + "retry" → SERIOUS formatting or structural issue ONLY
+- "needs_more_data" + "continue" → Truly cannot answer without reading actual file contents"""
+
+        return PromptTemplate(system=system_prompt)
+
+    @staticmethod
+    def reflection_content_gen_template() -> PromptTemplate:
+        """Template for reflecting on LinkedIn/content generation."""
+        system_prompt = """You are a self-reflective AI agent reviewing your LinkedIn post.
+
+REALISTIC SELF-ASSESSMENT:
+1. **Structure**: Does it have an engaging opening, body, and call-to-action?
+2. **Professional**: Is the tone appropriate for LinkedIn?
+3. **Completeness**: Does it mention the project and its value?
+
+IMPORTANT: You ONLY have local repository data. DO NOT request GitHub stats.
+
+If the post is professional and mentions the project → assessment: "good"
+DO NOT regenerate for minor wording improvements.
+
+Respond with JSON:
+{{
+    "assessment": "good/needs_improvement",
+    "critique": "Serious issue ONLY (1 sentence)",
+    "can_improve_without_data": true,
+    "next_action": "end/retry"
+}}
+
+BE VERY LENIENT: If post is decent → say "good" immediately. Don't waste API calls."""
+
+        return PromptTemplate(system=system_prompt)
+
+    @staticmethod
+    def reflection_code_question_template() -> PromptTemplate:
+        """Template for reflecting on code question answers."""
+        system_prompt = """You are reviewing output for a code question.
+
+CRITICAL UNDERSTANDING FOR CODE QUESTIONS:
+- If output shows specific file paths, line numbers, and code → assessment: "good"
+- If something is only used in 1 file, that IS the comprehensive answer
+- DO NOT request "comprehensive overview" if the answer already shows all occurrences
+- DO NOT request "integration details" if it's just a simple import
+- If answer directly addresses the question with specifics → assessment: "good"
+
+YOU CANNOT GET MORE DATA. If output answered the question with what's available → say "good"
+
+Respond with JSON:
+{{
+    "assessment": "good",
+    "critique": "Output answers the question with available data",
+    "can_improve_without_data": true,
+    "next_action": "end"
+}}
+
+BE EXTREMELY LENIENT: If question is answered with file paths/lines → say "good" immediately.
+DO NOT waste API calls regenerating the same data."""
+
+        return PromptTemplate(system=system_prompt)
+
+
 class PromptBuilder:
     """
     Builds prompts dynamically based on task type and configuration.
@@ -323,3 +414,23 @@ class PromptBuilder:
 
         else:
             return self.library.general_query_template(has_reflection)
+
+    def build_reflection_prompt(self, task_type: str) -> PromptTemplate:
+        """
+        Build a reflection prompt based on task type.
+
+        Args:
+            task_type: Type of task being reflected upon
+
+        Returns:
+            PromptTemplate instance for reflection
+        """
+        if task_type == "analyze_repo":
+            return self.library.reflection_repo_analysis_template()
+
+        elif task_type in ["linkedin_post", "generate_content"]:
+            return self.library.reflection_content_gen_template()
+
+        else:
+            # Code questions and general queries
+            return self.library.reflection_code_question_template()
