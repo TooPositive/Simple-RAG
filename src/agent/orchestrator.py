@@ -5,7 +5,6 @@ This module creates and manages the LangGraph workflow that
 orchestrates all agent nodes and tools.
 """
 
-import logging
 from langgraph.graph import StateGraph, END
 from src.agent.state import AgentState, create_initial_state
 from src.agent.nodes.planner import planning_node
@@ -15,9 +14,6 @@ from src.agent.nodes.reasoner import reasoning_node
 from src.agent.nodes.reflector import reflection_node
 from src.agent.nodes.generator import generation_node
 from src.agent.nodes.evaluator import evaluation_node
-
-# Set up logging
-logger = logging.getLogger(__name__)
 
 
 def create_agent_graph() -> StateGraph:
@@ -56,7 +52,7 @@ def create_agent_graph() -> StateGraph:
             "analyze": "repo_analyzer",
             "retrieve": "retriever",  # RAG retrieval from ChromaDB
             "reason": "reasoner",
-            "end": "evaluator"  # ALWAYS evaluate before ending
+            "end": END
         }
     )
     
@@ -145,23 +141,23 @@ def route_after_reflection(state: AgentState) -> str:
 async def run_agent(
     task: str,
     task_type: str = "analyze_repo",
-    max_iterations: int = 3,  # Allow 1-2 reflection loops for self-correction
+    max_iterations: int = None,  # Auto-set based on task type if None
     previous_repo_data: dict = None
 ) -> AgentState:
     """
     Run the agent on a task.
-    
+
     This is the main entry point for executing the agent workflow.
-    
+
     Args:
         task: Task description
         task_type: Type of task ("analyze_repo", "generate_post", etc.)
-        max_iterations: Maximum iterations allowed
+        max_iterations: Maximum iterations allowed (auto-set if None)
         previous_repo_data: Optional cached repository data from previous query
-    
+
     Returns:
         AgentState: Final state after execution
-    
+
     Example:
         >>> result = await run_agent(
         ...     task="Analyze this repository",
@@ -169,6 +165,16 @@ async def run_agent(
         ... )
         >>> print(result["final_output"])
     """
+    # Auto-set max_iterations based on task type if not specified
+    if max_iterations is None:
+        if task_type == "analyze_repo":
+            # Repo analysis benefits from reflection loops
+            max_iterations = 3
+        else:
+            # Other tasks (RAG, content gen, code questions) skip reflection
+            # So they don't loop - single pass is enough
+            max_iterations = 1
+
     # Create initial state
     initial_state = create_initial_state(
         task=task,
@@ -185,50 +191,17 @@ async def run_agent(
         initial_state["code_files"] = previous_repo_data.get('code_files', [])
         initial_state["code_symbols"] = previous_repo_data.get('code_symbols', {})
         initial_state["verification_outputs"] = previous_repo_data.get('verification_outputs', {})
-
-    # Create and run graph with proper exception handling
+    
+    # Create and run graph
     graph = create_agent_graph()
-
-    try:
-        final_state = await graph.ainvoke(initial_state)
-    except Exception as e:
-        logger.error(f"Agent execution failed: {e}", exc_info=True)
-        print(f"  ❌ Agent execution encountered an error: {type(e).__name__}")
-        print(f"  💡 Creating fallback response...")
-
-        # Create fallback state with error information
-        final_state = initial_state.copy()
-        final_state["final_output"] = (
-            f"I apologize, but I encountered an error while processing your request.\n\n"
-            f"**Error Type:** {type(e).__name__}\n"
-            f"**Details:** {str(e)[:200]}\n\n"
-            f"This may be due to:\n"
-            f"- Missing or invalid API credentials\n"
-            f"- Network connectivity issues\n"
-            f"- Rate limiting from API providers\n"
-            f"- Invalid input format\n\n"
-            f"Please check your configuration and try again."
-        )
-        final_state["is_complete"] = False
-        final_state["evaluation_scores"] = {
-            "task_completion": 0.0,
-            "reasoning_quality": 0.0,
-            "tool_effectiveness": 0.0,
-            "reflection_quality": 0.0,
-            "output_quality": 0.0,
-            "overall_score": 0.0
-        }
-
+    final_state = await graph.ainvoke(initial_state)
+    
     # Generate evaluation explanations if scores exist
     if final_state.get("evaluation_scores"):
-        try:
-            from src.evaluation.explanations import generate_all_explanations
-            final_state["evaluation_explanations"] = generate_all_explanations(
-                final_state,
-                final_state["evaluation_scores"]
-            )
-        except Exception as e:
-            logger.warning(f"Failed to generate evaluation explanations: {e}")
-            # Continue without explanations rather than failing
-
+        from src.evaluation.explanations import generate_all_explanations
+        final_state["evaluation_explanations"] = generate_all_explanations(
+            final_state, 
+            final_state["evaluation_scores"]
+        )
+    
     return final_state

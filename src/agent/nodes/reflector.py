@@ -15,16 +15,16 @@ load_dotenv()
 async def reflection_node(state: AgentState) -> AgentState:
     """
     Perform self-reflection and critique on actual output.
-    
+
     This demonstrates the "Reasoning & Reflection" requirement for Ciklum AI Academy.
     The agent analyzes its own OUTPUT (not just reasoning) and decides if:
     - Output is good enough → proceed to evaluation
     - Output needs improvement → regenerate with critique
     - Output lacks data → request more tools/analysis
-    
+
     Args:
         state: Current agent state with final_output
-    
+
     Returns:
         AgentState: Updated state with reflection and next action
     """
@@ -37,14 +37,12 @@ async def reflection_node(state: AgentState) -> AgentState:
     tool_usage = state.get("tool_usage", [])
     generation_count = state.get("generation_count", 0)  # Track generation attempts
 
-    # Check if reflection should be skipped (for simple queries)
+    # Check if reflection should be skipped
     skip_reflection = state.get("skip_reflection", False)
-
     if skip_reflection:
-        # Skip expensive LLM reflection for simple factual queries
         print("  ⚡ Self-reflection skipped (simple query - saves ~2500 tokens)")
         new_state["reflection_notes"] = state.get("reflection_notes", []) + [
-            "Reflection: Skipped for simple query (token optimization)"
+            "Reflection: Skipped for simple query type"
         ]
         new_state["reflection_assessment"] = "good"
         new_state["next_action"] = "end"
@@ -257,14 +255,14 @@ DO NOT waste API calls regenerating the same data.
                 # Check if rate limit error
                 if '429' in error_str and attempt < max_retries - 1:
                     import re
-                    import asyncio
+                    import time
                     # Extract wait time from error
                     match = re.search(r'retry after (\d+) seconds', error_str.lower())
-                    base_wait = int(match.group(1)) if match else 2
-                    wait_time = min(base_wait * (2 ** attempt), 60)  # Exponential backoff, capped at 60s
-
+                    wait_time = int(match.group(1)) if match else 2
+                    wait_time *= (attempt + 1)  # Exponential backoff
+                    
                     print(f"  ⏳ High demand - waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
-                    await asyncio.sleep(wait_time)
+                    time.sleep(wait_time)
                     continue
                 else:
                     # Not rate limit or last attempt - use fallback

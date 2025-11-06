@@ -17,15 +17,25 @@ load_dotenv()
 async def reasoning_node(state: AgentState) -> AgentState:
     """
     Perform chain-of-thought reasoning using LLM.
-    
+
     Args:
         state: Current agent state
-    
+
     Returns:
         AgentState: Updated state with reasoning
     """
     new_state = dict(state)
-    
+
+    # Check if reasoning should be skipped (for trivial queries)
+    skip_reasoning = state.get("skip_reasoning", False)
+    if skip_reasoning:
+        print("  ⚡ Reasoning skipped (simple query - saves ~1500 tokens)")
+        new_state["reasoning_steps"] = state["reasoning_steps"] + [
+            "Reasoning: Direct response (no complex reasoning needed)"
+        ]
+        new_state["next_action"] = "generate"
+        return new_state
+
     # Get LLM client - check if credentials available
     api_key = os.getenv("AZURE_OPENAI_API_KEY")
     if not api_key:
