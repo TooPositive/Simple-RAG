@@ -15,6 +15,7 @@
 ## 📚 Quick Navigation
 
 - [What Is This Project?](#-what-is-this-project)
+- [Problem Statement](#-problem-statement--real-world-application)
 - [Capstone Requirements](#-capstone-requirements-fulfillment)
 - [Architecture](#-architecture-overview)
 - [Key Features](#-key-features--technical-implementation)
@@ -48,6 +49,45 @@ This project demonstrates the complete journey from a **basic RAG chatbot** to a
 - **Evidence-based analysis** (demands concrete code refs, test citations, versions)
 
 **Built for**: Analyzing its own codebase, answering technical questions, generating LinkedIn posts, and demonstrating true agentic behavior with self-correction capabilities.
+
+---
+
+## 🎯 Problem Statement & Real-World Application
+
+### What Problem Does This Solve?
+
+This agent addresses **three critical challenges** faced by developers and teams:
+
+1. **Autonomous Code Understanding**
+   - **Problem**: Developers spend significant time understanding unfamiliar codebases (especially during onboarding or code reviews)
+   - **Solution**: Agent automatically analyzes repositories, extracts structure, dependencies, and architecture
+   - **Impact**: Reduces codebase exploration time from hours to minutes
+
+2. **Self-Documenting Systems**
+   - **Problem**: Technical documentation becomes outdated quickly and requires manual updates
+   - **Solution**: Agent autonomously generates evidence-based documentation with concrete code references
+   - **Impact**: Always-current documentation that cites actual file paths, line numbers, and test counts
+
+3. **AI System Transparency & Evaluation**
+   - **Problem**: Black-box AI systems make it hard to understand how decisions are made
+   - **Solution**: Agent provides transparent reasoning, self-reflection, and detailed evaluation explanations
+   - **Impact**: Users understand WHY the agent scored a certain way, not just the score itself
+
+### Meta-Capability: Agent Analyzes Itself
+
+The agent demonstrates its capabilities by **analyzing its own repository**, showcasing:
+- Understanding of its own architecture
+- Ability to explain its design decisions
+- Generation of professional posts about itself
+- Self-evaluation of its own performance
+
+This meta-capability proves the agent can be applied to **any** codebase, making it a valuable tool for:
+- Developer onboarding
+- Code review preparation
+- Technical debt assessment
+- Project documentation automation
+
+**Architecture Diagram**: See `architecture.mmd` in the repository root for the complete visual workflow.
 
 ---
 
