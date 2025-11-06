@@ -41,3 +41,4 @@ htmlcov/
 *.log
 
 docs2/.agent_cache/
+.agent_cache/
