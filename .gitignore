@@ -40,4 +40,4 @@ htmlcov/
 # Logs
 *.log
 
-docs2/
+docs2/.agent_cache/

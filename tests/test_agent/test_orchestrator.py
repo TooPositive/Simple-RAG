@@ -84,15 +84,15 @@ class TestRoutingLogic:
         
         assert result == "continue"
     
-    def test_route_after_reflection_generate(self):
-        """Test routing to generate after reflection."""
+    def test_route_after_reflection_end(self):
+        """Test routing to end (evaluator) after good reflection."""
         state = create_initial_state("Test", "test")
-        state["reflection_notes"] = ["Ready to generate"]
-        state["next_action"] = "generate"
-        
+        state["reflection_notes"] = ["Output looks good, ready for evaluation"]
+        state["next_action"] = "end"
+
         result = route_after_reflection(state)
-        
-        assert result == "generate"
+
+        assert result == "end"
     
     def test_route_after_reflection_retry(self):
         """Test routing to retry after reflection."""
