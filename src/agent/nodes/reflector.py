@@ -31,7 +31,7 @@ class ReflectionResult:
     ):
         self.assessment = assessment
         self.critique = critique
-        next_action = next_action
+        self.next_action = next_action
         self.can_improve_without_data = can_improve_without_data
 
 

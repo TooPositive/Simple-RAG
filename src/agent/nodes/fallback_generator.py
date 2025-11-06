@@ -159,7 +159,11 @@ class FallbackGenerator:
         output = "## 🏆 Quality Metrics\n\n"
 
         # Try to extract from verification outputs
-        verification_outputs = state.get('verification_outputs', {})
+        verification_outputs = state.get('verification_outputs')
+
+        # Handle None case
+        if verification_outputs is None:
+            verification_outputs = {}
 
         if "pytest_collect" in verification_outputs:
             import re

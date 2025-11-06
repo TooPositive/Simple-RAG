@@ -37,10 +37,10 @@ class TestReflectionNode:
         """Test that reflection sets next action."""
         state = create_initial_state("Test", "test")
         state["reasoning_steps"] = ["Step 1", "Step 2"]
-        
+
         result = await reflection_node(state)
-        
-        assert result["next_action"] in ["generate", "continue", "retry"]
+
+        assert result["next_action"] in ["end", "continue", "retry"]
     
     @pytest.mark.asyncio
     async def test_reflection_evaluates_reasoning(self):
@@ -71,14 +71,14 @@ class TestReflectionDecisions:
     
     @pytest.mark.asyncio
     async def test_reflection_decides_to_generate(self):
-        """Test reflection deciding to generate output."""
+        """Test reflection deciding to end (proceed to evaluation)."""
         state = create_initial_state("Test", "test")
         state["reasoning_steps"] = ["Complete analysis"]
-        
+
         result = await reflection_node(state)
-        
-        # Should decide to generate
-        assert result["next_action"] == "generate"
+
+        # Should decide to end (proceed to evaluation)
+        assert result["next_action"] == "end"
     
     @pytest.mark.asyncio
     async def test_reflection_with_minimal_reasoning(self):
