@@ -141,23 +141,23 @@ def route_after_reflection(state: AgentState) -> str:
 async def run_agent(
     task: str,
     task_type: str = "analyze_repo",
-    max_iterations: int = 1,  # Single pass through workflow (no looping needed)
+    max_iterations: int = None,  # Auto-set based on task type if None
     previous_repo_data: dict = None
 ) -> AgentState:
     """
     Run the agent on a task.
-    
+
     This is the main entry point for executing the agent workflow.
-    
+
     Args:
         task: Task description
         task_type: Type of task ("analyze_repo", "generate_post", etc.)
-        max_iterations: Maximum iterations allowed
+        max_iterations: Maximum iterations allowed (auto-set if None)
         previous_repo_data: Optional cached repository data from previous query
-    
+
     Returns:
         AgentState: Final state after execution
-    
+
     Example:
         >>> result = await run_agent(
         ...     task="Analyze this repository",
@@ -165,6 +165,16 @@ async def run_agent(
         ... )
         >>> print(result["final_output"])
     """
+    # Auto-set max_iterations based on task type if not specified (TOKEN OPTIMIZATION)
+    if max_iterations is None:
+        if task_type == "analyze_repo":
+            # Repo analysis benefits from reflection loops for quality
+            max_iterations = 3
+        else:
+            # Other tasks (RAG, content gen, code questions) skip reflection
+            # So they don't loop - single pass is enough (saves tokens)
+            max_iterations = 1
+
     # Create initial state
     initial_state = create_initial_state(
         task=task,
