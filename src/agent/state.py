@@ -57,6 +57,8 @@ class AgentState(TypedDict):
     generation_count: int  # Number of times output was generated
     max_iterations: int  # Maximum allowed iterations
     is_complete: bool  # Whether task is complete
+    skip_reasoning: bool  # Skip LLM reasoning for trivial queries (saves ~1500 tokens)
+    skip_reflection: bool  # Skip LLM reflection for simple tasks (saves ~2500 tokens)
 
 
 def create_initial_state(
@@ -122,7 +124,9 @@ def create_initial_state(
         iteration_count=0,
         generation_count=0,
         max_iterations=max_iterations,
-        is_complete=False
+        is_complete=False,
+        skip_reasoning=False,  # Will be set by planner based on task complexity
+        skip_reflection=False  # Will be set by planner based on task type
     )
 
 
