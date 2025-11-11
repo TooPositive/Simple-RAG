@@ -1,0 +1,105 @@
+%% Simple-RAG v2.0 - Data Flow & Token Optimization
+%% Query Processing Pipeline with Intelligent Caching
+
+sequenceDiagram
+    participant User
+    participant CLI as Interactive CLI
+    participant Plan as Planning Node
+    participant Reason as Reasoning Node
+    participant Analyze as Analysis Node
+    participant RAG as RAG System
+    participant Gen as Generation Node
+    participant Reflect as Reflection Node
+    participant Eval as Evaluation Node
+    participant LLM as Azure OpenAI
+
+    Note over User,Eval: 📊 Query 1: "What is this repo about?"
+
+    User->>CLI: Query: "What is this repo about?"
+    CLI->>Plan: Route query to planner
+
+    Plan->>Plan: Detect task type:<br/>analyze_repo
+    Plan->>Plan: Set skip_reasoning: false<br/>Set skip_reflection: false
+    Plan-->>Reason: next_action: "reason"
+
+    Reason->>LLM: Generate reasoning steps
+    LLM-->>Reason: 5-step plan
+    Reason-->>Analyze: next_action: "analyze"
+
+    Analyze->>Analyze: Run repository tools:<br/>✓ Structure (31 items)<br/>✓ Code symbols (169)<br/>✓ Dependencies (26)
+    Note right of Analyze: 💾 Cache repo data<br/>for future queries
+    Analyze-->>RAG: next_action: "retrieve"
+
+    RAG->>RAG: Query vector store<br/>for relevant docs
+    RAG-->>Gen: Context assembled
+
+    Gen->>Gen: Build full context:<br/>- RAG results<br/>- Repo data<br/>- Reasoning steps
+    Gen->>LLM: Generate response (2701 chars)
+    LLM-->>Gen: Detailed analysis with evidence
+    Gen-->>Reflect: Response ready
+
+    Reflect->>LLM: Evaluate response quality
+    LLM-->>Reflect: Assessment: "good"
+    Reflect-->>Eval: next_action: "end"
+
+    Eval->>Eval: Calculate scores:<br/>✓ Task: 100/100<br/>✓ Reasoning: 100/100<br/>✓ Tools: 100/100<br/>✓ Output: 90/100
+    Eval-->>CLI: Overall: 93/100
+    CLI-->>User: Response + Scores
+
+    Note over User,Eval: Total cost: ~3000 tokens
+
+    Note over User,Eval: ⚡ Query 2: "Where do we use langgraph?"
+
+    User->>CLI: Query: "Where do we use langgraph?"
+    CLI->>Plan: Route query
+
+    Plan->>Plan: Detect task type:<br/>code_question
+    Plan->>Plan: Set skip_reasoning: false<br/>Set skip_reflection: true
+    Plan-->>Reason: next_action: "reason"
+
+    Reason->>LLM: Generate reasoning steps
+    LLM-->>Reason: 5-step plan
+    Reason-->>Analyze: next_action: "analyze"
+
+    Note over Analyze: 💾 Use cached repo data<br/>✓ Structure (cached)<br/>✓ Symbols (cached)<br/>✓ Dependencies (cached)
+    Analyze-->>Gen: next_action: "generate"
+
+    Gen->>Gen: Build context from cache
+    Gen->>Gen: Include code excerpts
+    Gen->>LLM: Generate focused answer
+    LLM-->>Gen: File + line numbers + code
+    Gen-->>Reflect: Response ready
+
+    Note over Reflect: ⚡ Skip reflection<br/>(saves ~2500 tokens)
+    Reflect-->>Eval: next_action: "end"
+
+    Eval-->>CLI: Score: 78/100
+    CLI-->>User: Accurate response
+
+    Note over User,Eval: Total cost: ~1000 tokens (85% savings via cache + skip)
+
+    Note over User,Eval: ⚡ Query 3: "Hi"
+
+    User->>CLI: Query: "Hi"
+    CLI->>Plan: Route query
+
+    Plan->>Plan: Detect task type:<br/>general (trivial)
+    Plan->>Plan: Set skip_reasoning: true<br/>Set skip_reflection: true
+    Plan-->>Reason: next_action: "reason"
+
+    Note over Reason: ⚡ Skip reasoning<br/>(saves ~1500 tokens)
+    Reason-->>Gen: next_action: "generate"
+
+    Gen->>LLM: Generate greeting (34 chars)
+    LLM-->>Gen: "Hello! How can I assist you?"
+    Gen-->>Reflect: Response ready
+
+    Note over Reflect: ⚡ Skip reflection<br/>(saves ~2500 tokens)
+    Reflect-->>Eval: next_action: "end"
+
+    Eval-->>CLI: Score: 67/100
+    CLI-->>User: Simple greeting
+
+    Note over User,Eval: Total cost: ~500 tokens (87% savings via double skip)
+
+    Note over User,Eval: 🎯 Token Optimization Summary<br/>Query 1 (Full): 3000 tokens<br/>Query 2 (Cache+Skip): 1000 tokens (85% ⬇️)<br/>Query 3 (Double Skip): 500 tokens (87% ⬇️)

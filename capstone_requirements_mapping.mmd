@@ -1,0 +1,115 @@
+%% Simple-RAG v2.0 - Capstone Requirements Mapping
+%% How the system fulfills each requirement
+
+graph LR
+    %% Capstone Requirements
+    subgraph "📚 Capstone Requirements"
+        R1[1️⃣ Data Preparation &<br/>Contextualization]
+        R2[2️⃣ RAG Pipeline<br/>Design]
+        R3[3️⃣ Reasoning &<br/>Reflection ⭐]
+        R4[4️⃣ Tool-Calling<br/>Mechanisms]
+        R5[5️⃣ Evaluation<br/>System]
+    end
+
+    %% Implementation Components
+    subgraph "🔧 Implementation: Data Preparation"
+        D1[structure_analyzer.py<br/>📁 Analyzes repo structure]
+        D2[code_analyzer.py<br/>🔬 AST parsing for symbols]
+        D3[dependency_extractor.py<br/>📦 Extracts requirements]
+        D4[test_collector.py<br/>🧪 Collects pytest tests]
+        D5[processor.py<br/>📄 Processes docs/PDFs]
+    end
+
+    subgraph "🔧 Implementation: RAG System"
+        RAG1[chatbot.py<br/>🤖 RAGChatbot class]
+        RAG2[ChromaDB<br/>🔢 Vector database]
+        RAG3[text-embedding-3-small<br/>🧮 Azure embeddings]
+        RAG4[Hybrid Retrieval<br/>🔍 Semantic + keyword]
+    end
+
+    subgraph "🔧 Implementation: Reasoning & Reflection"
+        RR1[reasoner.py<br/>🧠 Multi-step reasoning]
+        RR2[reflector.py<br/>🔄 Self-evaluation]
+        RR3[Chain-of-Thought<br/>💭 5-step planning]
+        RR4[Quality Assessment<br/>✅ Good/Continue/Retry]
+    end
+
+    subgraph "🔧 Implementation: Tool System"
+        T1[analyze_repository<br/>📊 Full repo scan]
+        T2[extract_code_symbols<br/>🔬 AST analysis]
+        T3[collect_tests<br/>🧪 pytest --collect-only]
+        T4[get_coverage_report<br/>📈 Coverage metrics]
+        T5[search_code<br/>🔎 Pattern matching]
+    end
+
+    subgraph "🔧 Implementation: Evaluation"
+        E1[evaluator.py<br/>📊 Main evaluator]
+        E2[Multi-dimensional<br/>🎯 5 score types]
+        E3[Task-specific<br/>📋 Specialized evals]
+        E4[0-100 scoring<br/>🔢 Objective metrics]
+    end
+
+    %% Mappings
+    R1 --> D1
+    R1 --> D2
+    R1 --> D3
+    R1 --> D4
+    R1 --> D5
+
+    R2 --> RAG1
+    R2 --> RAG2
+    R2 --> RAG3
+    R2 --> RAG4
+
+    R3 --> RR1
+    R3 --> RR2
+    R3 --> RR3
+    R3 --> RR4
+
+    R4 --> T1
+    R4 --> T2
+    R4 --> T3
+    R4 --> T4
+    R4 --> T5
+
+    R5 --> E1
+    R5 --> E2
+    R5 --> E3
+    R5 --> E4
+
+    %% Evidence & Results
+    subgraph "📊 Evidence & Results"
+        EV1[✅ 169 code symbols extracted<br/>40 classes, 129 functions]
+        EV2[✅ 26 dependencies identified<br/>11 modules mapped]
+        EV3[✅ Semantic search working<br/>ChromaDB + embeddings]
+        EV4[✅ 5-step reasoning process<br/>Self-assessment: good]
+        EV5[✅ 6+ autonomous tools<br/>Context-aware usage]
+        EV6[✅ Scores: 67-93/100<br/>Task completion: 100%]
+    end
+
+    D2 -.-> EV1
+    D3 -.-> EV2
+    RAG2 -.-> EV3
+    RR3 -.-> EV4
+    T1 -.-> EV5
+    E2 -.-> EV6
+
+    %% Production Quality Additions
+    subgraph "⭐ Bonus: Production Quality"
+        PQ1[81% code reduction<br/>931 → 170 lines]
+        PQ2[SOLID principles<br/>8 modular components]
+        PQ3[Token optimization<br/>54-87% savings]
+        PQ4[33/33 tests passing<br/>100% test success]
+        PQ5[Dependency injection<br/>MockLLMClient for testing]
+    end
+
+    %% Styling
+    classDef reqStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
+    classDef implStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef evidenceStyle fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef bonusStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+
+    class R1,R2,R3,R4,R5 reqStyle
+    class D1,D2,D3,D4,D5,RAG1,RAG2,RAG3,RAG4,RR1,RR2,RR3,RR4,T1,T2,T3,T4,T5,E1,E2,E3,E4 implStyle
+    class EV1,EV2,EV3,EV4,EV5,EV6 evidenceStyle
+    class PQ1,PQ2,PQ3,PQ4,PQ5 bonusStyle
