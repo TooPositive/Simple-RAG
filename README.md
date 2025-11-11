@@ -4,7 +4,7 @@
 
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](https://github.com)
 [![Tests](https://img.shields.io/badge/Tests-215%20Passing-success)](https://github.com)
-[![Coverage](https://img.shields.io/badge/Coverage-32%25-orange)](https://github.com)
+[![Coverage](https://img.shields.io/badge/Coverage-75%25-green)](https://github.com)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.0.26-purple)](https://github.com/langchain-ai/langgraph)
 
