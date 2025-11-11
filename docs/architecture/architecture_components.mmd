@@ -1,0 +1,119 @@
+%% Simple-RAG v2.0 - Component Architecture
+%% Production-Quality Refactored Components
+
+graph TB
+    %% Main Application Entry
+    subgraph "🎯 Application Layer"
+        CLI[interactive_agent.py<br/>AgentCLI Class]
+        Main[main.py<br/>Entry Point]
+    end
+
+    %% Agent System
+    subgraph "🤖 Agent System (src/agent/)"
+        Orchestrator[orchestrator.py<br/>🎯 LangGraph Workflow<br/>- create_agent_graph<br/>- run_agent<br/>- conditional routing]
+
+        State[state.py<br/>📦 State Management<br/>- AgentState TypedDict<br/>- skip_reasoning flag<br/>- skip_reflection flag]
+
+        subgraph "Agent Nodes (src/agent/nodes/)"
+            Planner[planner.py<br/>📋 Planning<br/>- Task detection<br/>- Skip flag setting<br/>- Workflow routing]
+
+            Reasoner[reasoner.py<br/>🧠 Reasoning<br/>- Chain-of-thought<br/>- Multi-step planning<br/>- Token optimization]
+
+            Generator[generator.py<br/>✨ Generation<br/>170 lines (was 931)<br/>- ContentGenerator class<br/>- Dependency injection]
+
+            Reflector[reflector.py<br/>🔄 Reflection<br/>- Self-evaluation<br/>- Quality assessment<br/>- Improvement suggestions]
+        end
+    end
+
+    %% Refactored Components
+    subgraph "🏗️ Refactored Components (src/agent/nodes/)"
+        Config[config.py<br/>⚙️ Configuration<br/>200 lines<br/>- ProjectMetadata<br/>- LLMConfig<br/>- GeneratorConfig]
+
+        LLMClient[llm_client.py<br/>🧠 LLM Client<br/>242 lines<br/>- Azure OpenAI wrapper<br/>- Retry logic<br/>- MockLLMClient]
+
+        Templates[prompt_templates.py<br/>📝 Prompt Templates<br/>437 lines<br/>- Task-specific prompts<br/>- Template library<br/>- Evidence formatting]
+
+        ContextBuilder[context_builder.py<br/>🏗️ Context Builder<br/>463 lines<br/>- RAG context<br/>- Repo context<br/>- Reasoning assembly]
+
+        TaskDetector[task_detector.py<br/>🔍 Task Detector<br/>90 lines<br/>- Keyword matching<br/>- Task classification<br/>- Type detection]
+
+        FallbackGen[fallback_generator.py<br/>🛡️ Fallback Generator<br/>244 lines<br/>- Template responses<br/>- Graceful degradation<br/>- Error handling]
+
+        Exceptions[exceptions.py<br/>⚠️ Custom Exceptions<br/>38 lines<br/>- LLMError<br/>- ConfigurationError<br/>- TaskTypeError]
+    end
+
+    %% Tools System
+    subgraph "🛠️ Tool System (src/tools/)"
+        ToolRegistry[Tool Registry<br/>- analyze_repository<br/>- extract_code_symbols<br/>- collect_tests<br/>- get_coverage]
+
+        StructureAnalyzer[structure_analyzer.py<br/>📁 Structure Analysis<br/>- Directory traversal<br/>- File categorization]
+
+        CodeAnalyzer[code_analyzer.py<br/>🔬 Code Analysis<br/>- AST parsing<br/>- Symbol extraction<br/>- Class/function detection]
+
+        TestCollector[test_collector.py<br/>🧪 Test Collection<br/>- pytest integration<br/>- Test counting<br/>- Coverage analysis]
+    end
+
+    %% RAG System
+    subgraph "📚 RAG System (src/)"
+        Chatbot[chatbot.py<br/>🤖 RAGChatbot<br/>- ChromaDB integration<br/>- Document processing<br/>- Hybrid retrieval]
+
+        Processor[processor.py<br/>📄 Document Processor<br/>- PDF extraction<br/>- Markdown parsing<br/>- Code file handling]
+
+        Embeddings[embeddings.py<br/>🔢 Embeddings<br/>- Azure OpenAI<br/>- text-embedding-3-small<br/>- Vector generation]
+    end
+
+    %% Evaluation System
+    subgraph "📊 Evaluation System (src/evaluation/)"
+        Evaluator[evaluator.py<br/>📊 Main Evaluator<br/>- Multi-dimension scoring<br/>- Task completion<br/>- Output quality]
+
+        RepoEval[repo_evaluator.py<br/>📁 Repo Analysis Eval<br/>- Structure completeness<br/>- Accuracy checks]
+
+        LinkedInEval[linkedin_evaluator.py<br/>💼 LinkedIn Post Eval<br/>- Professional structure<br/>- Hashtag quality]
+    end
+
+    %% Data Flow
+    CLI --> Orchestrator
+    Main --> Orchestrator
+    Orchestrator --> State
+    Orchestrator --> Planner
+    Planner --> Reasoner
+    Reasoner --> Generator
+    Generator --> Reflector
+
+    %% Component Dependencies
+    Generator --> Config
+    Generator --> LLMClient
+    Generator --> Templates
+    Generator --> ContextBuilder
+    Generator --> TaskDetector
+    Generator --> FallbackGen
+
+    Orchestrator --> ToolRegistry
+    ToolRegistry --> StructureAnalyzer
+    ToolRegistry --> CodeAnalyzer
+    ToolRegistry --> TestCollector
+
+    Generator --> Chatbot
+    Chatbot --> Processor
+    Chatbot --> Embeddings
+
+    Reflector --> Evaluator
+    Evaluator --> RepoEval
+    Evaluator --> LinkedInEval
+
+    %% Error Handling
+    LLMClient -.->|throws| Exceptions
+    Config -.->|throws| Exceptions
+
+    %% Styling
+    classDef agentStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#000
+    classDef refactoredStyle fill:#fff3e0,stroke:#e65100,stroke-width:3px,color:#000
+    classDef toolStyle fill:#f1f8e9,stroke:#558b2f,stroke-width:2px,color:#000
+    classDef ragStyle fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    classDef evalStyle fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:#000
+
+    class Orchestrator,State,Planner,Reasoner,Generator,Reflector agentStyle
+    class Config,LLMClient,Templates,ContextBuilder,TaskDetector,FallbackGen,Exceptions refactoredStyle
+    class ToolRegistry,StructureAnalyzer,CodeAnalyzer,TestCollector toolStyle
+    class Chatbot,Processor,Embeddings ragStyle
+    class Evaluator,RepoEval,LinkedInEval evalStyle

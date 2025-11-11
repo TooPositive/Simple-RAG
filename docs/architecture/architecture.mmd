@@ -1,0 +1,80 @@
+%% Simple-RAG v2.0 - Architecture Diagram
+%% Ciklum AI Academy - Engineers Capstone Project
+
+graph TB
+    %% User Interface Layer
+    User([👤 User Query]) --> CLI[🖥️ Interactive CLI<br/>AgentCLI]
+
+    %% Main Orchestrator
+    CLI --> Orchestrator[🎯 LangGraph Orchestrator<br/>StateGraph Workflow]
+
+    %% State Management
+    Orchestrator --> State[(📦 AgentState<br/>- task, task_type<br/>- reasoning_steps<br/>- repo_data<br/>- rag_results<br/>- skip flags)]
+
+    %% Core Agent Nodes
+    Orchestrator --> Planning[📋 Planning Node<br/>- Detect task type<br/>- Set skip flags<br/>- Route workflow]
+
+    Planning --> Reasoning[🧠 Reasoning Node<br/>- Chain-of-thought<br/>- Multi-step plan<br/>- Skip if trivial]
+
+    Reasoning --> Analysis[🔍 Analysis Node<br/>- Repository tools<br/>- Code extraction<br/>- Dependency mapping]
+
+    Analysis --> Retrieval[📚 Retrieval Node<br/>- RAG pipeline<br/>- Vector search<br/>- Context building]
+
+    Retrieval --> Generation[✨ Generation Node<br/>- LLM response<br/>- Evidence citations<br/>- Fallback handling]
+
+    Generation --> Reflection[🔄 Reflection Node<br/>- Self-evaluation<br/>- Quality critique<br/>- Skip if simple]
+
+    Reflection --> Evaluation[📊 Evaluation Node<br/>- Multi-dimension scoring<br/>- Task completion<br/>- Output quality]
+
+    Evaluation --> Response([✅ Final Response<br/>+ Scores])
+    Response --> User
+
+    %% Tool Layer
+    Analysis --> Tools{🛠️ Autonomous Tools}
+    Tools --> T1[📁 Structure Analyzer<br/>analyze_repository]
+    Tools --> T2[🔬 Code Analyzer<br/>AST parsing]
+    Tools --> T3[🧪 Test Collector<br/>pytest integration]
+    Tools --> T4[📊 Coverage Analyzer<br/>coverage reports]
+    Tools --> T5[🔎 Code Search<br/>grep patterns]
+
+    T1 --> State
+    T2 --> State
+    T3 --> State
+    T4 --> State
+    T5 --> State
+
+    %% RAG Pipeline
+    Retrieval --> RAG[🤖 RAG System<br/>ChromaDB + Embeddings]
+    RAG --> Docs[(📄 Document Store<br/>- PDFs<br/>- Markdown<br/>- Code files)]
+    RAG --> Vector[(🔢 Vector Store<br/>ChromaDB<br/>text-embedding-3-small)]
+    Docs --> Vector
+
+    %% LLM Integration
+    Generation --> LLM[🧠 Azure OpenAI<br/>GPT-4o/GPT-4o-mini]
+    Reflection --> LLM
+    Reasoning --> LLM
+
+    %% Configuration & Components
+    Orchestrator -.-> Config[⚙️ Configuration<br/>config.py<br/>- Project metadata<br/>- LLM settings<br/>- Optimization flags]
+
+    Generation -.-> Templates[📝 Prompt Templates<br/>prompt_templates.py<br/>- Task-specific prompts<br/>- Evidence formatting]
+
+    Generation -.-> Context[🏗️ Context Builder<br/>context_builder.py<br/>- RAG context<br/>- Repo context<br/>- Reasoning history]
+
+    Generation -.-> Fallback[🛡️ Fallback Generator<br/>fallback_generator.py<br/>- Template responses<br/>- Graceful degradation]
+
+    %% Cache System
+    State -.-> Cache[(💾 Cache System<br/>- Repo data cache<br/>- Cross-query reuse<br/>- Token savings)]
+
+    %% Styling
+    classDef nodeStyle fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#000
+    classDef toolStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#000
+    classDef dataStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000
+    classDef llmStyle fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:#000
+    classDef configStyle fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000
+
+    class Planning,Reasoning,Analysis,Retrieval,Generation,Reflection,Evaluation nodeStyle
+    class T1,T2,T3,T4,T5,Tools toolStyle
+    class State,Docs,Vector,Cache dataStyle
+    class LLM,RAG llmStyle
+    class Config,Templates,Context,Fallback configStyle
