@@ -43,9 +43,10 @@ numpy<2.0.0
 # ============================================
 
 # LangChain ecosystem for agent orchestration
-langchain>=0.1.0
-langchain-openai>=0.0.5
-langgraph>=0.0.20
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langgraph>=0.2.0
 
 # Observability (optional but recommended)
 langsmith>=0.1.0  # Compatible with modern langchain versions

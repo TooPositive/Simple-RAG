@@ -186,4 +186,5 @@ class GeneratorConfig:
 
 
 # Global default configuration instance
-DEFAULT_CONFIG = GeneratorConfig()
+# Uses from_env() to load settings from environment variables
+DEFAULT_CONFIG = GeneratorConfig.from_env()
