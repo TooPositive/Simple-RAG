@@ -132,8 +132,10 @@ def test_embedding_and_storing(mocker, tmp_path):
     # 3. Retrieve the stored items and verify their structure
     stored_items = collection.get(include=["metadatas", "documents"])
 
-    # Check IDs
-    assert sorted(stored_items["ids"]) == ["chunk_0", "chunk_1"]
+    # Check IDs - should be hash-based with "chunk_" prefix
+    assert len(stored_items["ids"]) == 2
+    assert all(id.startswith("chunk_") for id in stored_items["ids"])
+    assert len(set(stored_items["ids"])) == 2  # All IDs should be unique
 
     # Check documents (the actual text content)
     assert "This is the first chunk." in stored_items["documents"]
