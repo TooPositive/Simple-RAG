@@ -227,7 +227,7 @@ Write an engaging LinkedIn post that:
    - Keep it authentic and professional
 
 6. **Closing**:
-   - Thank @{{organization}} and the team
+   - Thank @{organization} and the team
    - Mention GitHub repo is available
    - Use relevant hashtags from project metadata
 {reflection_section}

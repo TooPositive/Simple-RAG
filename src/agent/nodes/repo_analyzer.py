@@ -5,6 +5,7 @@ This node analyzes the codebase using repository tools.
 """
 
 import os
+import sys
 from src.agent.state import AgentState
 from src.tools.repository_tools import (
     analyze_directory_structure,
@@ -102,7 +103,7 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
     try:
         # Count actual tests with pytest
         result = subprocess.run(
-            ["pytest", "--collect-only", "-q"],
+            [sys.executable, "-m", "pytest", "--collect-only", "-q"],
             cwd=repo_root,
             capture_output=True,
             text=True,
@@ -123,17 +124,19 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
         try:
             # Check if .coverage file already exists (cached)
             coverage_file = os.path.join(repo_root, ".coverage")
+            coverage_is_valid = False
+
             if os.path.exists(coverage_file):
-                # Use cached coverage
+                # Try to use cached coverage
                 print(f"  📦 Using cached coverage data...")
                 result = subprocess.run(
-                    ["coverage", "report"],
+                    [sys.executable, "-m", "coverage", "report"],
                     cwd=repo_root,
                     capture_output=True,
                     text=True,
                     timeout=5
                 )
-                
+
                 if result.returncode == 0:
                     verification_outputs["coverage_report"] = result.stdout
                     import re
@@ -143,33 +146,35 @@ async def repo_analyzer_node(state: AgentState) -> AgentState:
                         print(f"  ✓ Coverage: {coverage_pct}% (cached)")
                     else:
                         print(f"  ✓ Coverage report (cached)")
+                    coverage_is_valid = True
                 else:
-                    # Cache is stale, need to re-run
-                    raise Exception("Cached coverage stale")
-            else:
+                    # Cache is stale, will regenerate
+                    print(f"  ℹ️  Cached coverage stale, regenerating...")
+
+            if not coverage_is_valid:
                 # No cache, check if coverage is available
                 check_result = subprocess.run(
-                    ["which", "coverage"],
+                    [sys.executable, "-m", "coverage", "--version"],
                     cwd=repo_root,
                     capture_output=True,
                     text=True,
                     timeout=5
                 )
-                
+
                 if check_result.returncode == 0:
                     # Coverage is installed, run tests with coverage
                     print(f"  ⏳ Running tests with coverage (this may take 30 seconds)...")
                     run_result = subprocess.run(
-                        ["coverage", "run", "-m", "pytest", "-q", "--tb=no"],
+                        [sys.executable, "-m", "coverage", "run", "-m", "pytest", "-q", "--tb=no"],
                         cwd=repo_root,
                         capture_output=True,
                         text=True,
                         timeout=30  # Reduced from 60 to 30
                     )
-                    
+
                     # Get the coverage report
                     report_result = subprocess.run(
-                        ["coverage", "report"],
+                        [sys.executable, "-m", "coverage", "report"],
                         cwd=repo_root,
                         capture_output=True,
                         text=True,
